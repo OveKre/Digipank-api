@@ -1,48 +1,5 @@
-# Node.js
-node_modules/
-npm-debug.log
-yarn-error.log
-
-# Environment variables
-.env
-.env.*
-!.env.example
-
-# Database
-*.db
-*.db-journal
-db/digipank.db
-
-# Logs
-logs/
-*.log
-
-# Keys and certificates
-*.pem
-*.key
-*.crt
-keys/
-!public/jwks/jwks.json
-
-# Tests
-coverage/
-
-# Build and distribution
-dist/
-build/
-
-# IDE and editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS files
-.DS_Store
-Thumbs.db
-keys/
-*.pem
-.env
+# Lisa ridu .gitignore faili
+Add-Content -Path .gitignore -Value @"
 
 # Node.js
 node_modules/
@@ -76,36 +33,4 @@ keys/
 # OS failid
 .DS_Store
 Thumbs.db
-
-# Node.js
-node_modules/
-npm-debug.log
-yarn-error.log
-
-# Andmebaas
-*.db
-*.db-journal
-db/*.db
-db/digipank.db
-
-# Logid
-logs/
-*.log
-
-# Tootmiskeskkonna võtmed
-keys/
-
-# Keskkonna muutujad
-.env
-.env.*
-!.env.example
-
-# VS Code / IDE failid
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS failid
-.DS_Store
-Thumbs.db
+"@
