@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # DigiPank - Pangaülekannete Süsteem
 
 DigiPank on täielikult funktsioneeriv harupanga rakendus, mis suhtleb keskpangaga ja võimaldab nii sise- kui välisülekannete tegemist. Süsteem kasutab RS256 krüptograafilisi võtmeid tehingute turvaliseks allkirjastamiseks, tagades turvalisuse pankadevahelistes ülekannetesa.
@@ -167,3 +168,6 @@ Vabavara, kõikidele vaba kasutamiseks
 Autor: Ove
 
 © 2025 DigiPank. Kõik õigused kaitstud.
+=======
+# Digipank-api
+>>>>>>> 80ba95e868c80ed75507e9515f8ce257bb58e0ba
