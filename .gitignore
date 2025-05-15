@@ -34,3 +34,7 @@ keys/
 .DS_Store
 Thumbs.db
 "@
+
+# Package files (not recommended to ignore!)
+# package.json
+# package-lock.json
