@@ -43,3 +43,36 @@ Thumbs.db
 keys/
 *.pem
 .env
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Andmebaas
+*.db
+*.db-journal
+db/*.db
+db/digipank.db
+
+# Logid
+logs/
+*.log
+
+# Tootmiskeskkonna võtmed
+keys/
+
+# Keskkonna muutujad
+.env
+.env.*
+!.env.example
+
+# VS Code / IDE failid
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS failid
+.DS_Store
+Thumbs.db
