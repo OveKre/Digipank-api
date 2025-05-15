@@ -1,0 +1,12 @@
+{
+  "keys": [
+    {
+      "kty": "RSA",
+      "kid": "bank-signing-key-2025-05-15",
+      "use": "sig",
+      "alg": "RS256",
+      "e": "AQAB",
+      "n": "wNAQAg0XkeQjcIetq7He2IAqqFHLng1RYM123ZtP-NOmN8ct5ILHjPNAPDe8OIMEDgme0MXqoQTckuUP89m98XiLjHQxQ59AIBtuKk8--QCLqQ2dbtB4Jh6oGAT_ySzko39-gTzkcveopa8zlX8bTFsupd3OhCX57BbFFrBaqBjCoQhViA8a6RLYcWVhy52g_t3We7JEvM5NEmZPaoCZT9-mtxuvYvB5KYuXQ5CA3getzDaKNeHVqdwqUx_siyWDrhTJJ0f19Eh9tAHBuyrkgStr24SFbKylB3-9OV8GqETZdoWObkfvryDKRvQXlJYe31U9dOY20eHkYHfJh26gMQ"
+    }
+  ]
+}

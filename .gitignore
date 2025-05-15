@@ -1,0 +1,27 @@
+Node.js
+node_modules/ npm-debug.log yarn-error.log
+
+Environment variables
+.env
+
+Database
+*.db *.db-journal
+
+Logs
+logs/ *.log
+
+Keys and certificates
+*.pem *.key .crt !public/jwks/.pem
+
+Tests
+coverage/
+
+Build and distribution
+dist/ build/
+
+IDE and editor files
+.vscode/ .idea/ *.swp *.swo
+
+OS files
+.DS_Store Thumbs.db
+
