@@ -1,27 +1,42 @@
-Node.js
-node_modules/ npm-debug.log yarn-error.log
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
 
-Environment variables
+# Environment variables
 .env
+.env.*
+!.env.example
 
-Database
-*.db *.db-journal
+# Database
+*.db
+*.db-journal
+db/digipank.db
 
-Logs
-logs/ *.log
+# Logs
+logs/
+*.log
 
-Keys and certificates
-*.pem *.key .crt !public/jwks/.pem
+# Keys and certificates
+*.pem
+*.key
+*.crt
+keys/
+!public/jwks/jwks.json
 
-Tests
+# Tests
 coverage/
 
-Build and distribution
-dist/ build/
+# Build and distribution
+dist/
+build/
 
-IDE and editor files
-.vscode/ .idea/ *.swp *.swo
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
 
-OS files
-.DS_Store Thumbs.db
-
+# OS files
+.DS_Store
+Thumbs.db
