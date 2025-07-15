@@ -10,3 +10,4 @@ keys/
 coverage/
 .nyc_output/
 temp/
+test-jwt-generator.js
