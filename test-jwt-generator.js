@@ -8,8 +8,8 @@ const testPrivateKey = `-----BEGIN PRIVATE
 
 function generateTestJWT() {
     const payload = {
-        accountFrom: "12345678901234567890", // Henno panga konto näide
-        accountTo: "05b1234567890123456789",  // Teie Digipanga konto
+        accountFrom: "12345678901234567890", // 
+        accountTo: "1234567890123456789",  // 
         amount: 50000, // 500 eurot sentides
         currency: "EUR",
         explanation: "Test ülekanne B2B endpointi",
