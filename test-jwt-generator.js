@@ -2,15 +2,8 @@ const jwt = require('jsonwebtoken');
 const fs = require('fs');
 
 // Testimiseks - päris elus kasutaks teine pank oma privaatvõtit
-const testPrivateKey = `-----BEGIN PRIVATE KEY-----
-MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7VJTUt9Us8cKB
-VJbfHgvRDQwJGnGW1UvE3pS8PGj3nkGvv1sOJzZz4OdGfuG1GdJgNbJgJi5x
-XYV2jlGkJQUzjOmXc4NcNnXmD0KqC6QbRKgdO2YGONHPdK7M8N0jS8M6P7jq
-2JfgvLsD7TgGJJZJ7gXpRnJhG3r4HG5LxG8vP1DfKnG9O4W5JtKyQ6L3KQxH
-KyOzGnN7cV6kR5R6O3S4Q2YR1R1JKNkNJmS2FyDtGxuOqKjNjG8iP6hD7VoQ
-CpqjVJkX8Y7oRgY4H5p3nCj2pLBPRY9LK3gG7zJ5X3lQ2KjH9vPQ5K3tL1R
-qJnO7pQ3J8V2W9iKzR7S6M5L3YrAgMBAAECggEAJcqrOm1JQQgLhJmK2F5K
-AgMBAAECggEAJcqrOm1JQQgLhJmK2F5K
+const testPrivateKey = `-----BEGIN PRIVATE 
+
 -----END PRIVATE KEY-----`;
 
 function generateTestJWT() {
