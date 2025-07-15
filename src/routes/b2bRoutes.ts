@@ -37,12 +37,11 @@ const logger = new Logger();
  *             schema:
  *               type: object
  *               properties:
- *                 status:
+ *                 receiverName:
  *                   type: string
- *                   description: Processing status
- *                 transactionId:
- *                   type: string
- *                   description: Internal transaction ID
+ *                   description: Name of the account owner receiving the funds
+ *               required:
+ *                 - receiverName
  *       400:
  *         description: Validation error or invalid JWT
  *       404:
@@ -86,6 +85,9 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
+    // Amount is already in euros, store directly as euros
+    const amountInEuros = payload.amount;
+
     // Check if destination account exists and belongs to this bank
     const toAccount = await transactionService.getAccountByNumber(payload.accountTo);
     if (!toAccount) {
@@ -95,11 +97,11 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
-    // Create incoming transaction record
+    // Create incoming transaction record with amount in euros
     const transaction = await transactionService.createTransaction(
       payload.accountFrom,
       payload.accountTo,
-      payload.amount,
+      amountInEuros,
       payload.currency,
       payload.explanation,
       payload.senderName
@@ -119,10 +121,10 @@ router.post('/', async (req: Request, res: Response) => {
         [TransactionStatus.IN_PROGRESS, transaction.id]
       );
 
-      // Credit the destination account
+      // Credit the destination account with amount in euros
       await (database as any).runAsync(
         'UPDATE accounts SET balance = balance + ? WHERE number = ?',
-        [payload.amount, payload.accountTo]
+        [amountInEuros, payload.accountTo]
       );
 
       // Update transaction status to completed
@@ -133,9 +135,14 @@ router.post('/', async (req: Request, res: Response) => {
 
       logger.info(`B2B transaction processed successfully: ${transaction.id}`);
 
+      // Get receiver name from account owner
+      const receiverAccount = await (database as any).getAsync(
+        'SELECT u.name FROM users u JOIN accounts a ON u.id = a.user_id WHERE a.number = ?',
+        [payload.accountTo]
+      );
+
       res.json({
-        status: 'completed',
-        transactionId: transaction.id
+        receiverName: receiverAccount ? receiverAccount.name : 'Unknown'
       });
 
     } catch (processingError) {

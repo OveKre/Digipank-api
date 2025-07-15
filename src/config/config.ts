@@ -8,9 +8,10 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   
   // Bank configuration
-  bankPrefix: process.env.BANK_PREFIX || 'DIGI',
+  bankPrefix: process.env.BANK_PREFIX || '05b',
   bankName: process.env.BANK_NAME || 'Digipank',
-  centralBankUrl: process.env.CENTRAL_BANK_URL || 'https://api.testbank.ee',
+  centralBankUrl: process.env.CENTRAL_BANK_URL || 'https://henno.cfd/central-bank/',
+  centralBankApiKey: process.env.API_KEY || '',
   
   // Database configuration
   databasePath: process.env.DATABASE_PATH || './bank.db',

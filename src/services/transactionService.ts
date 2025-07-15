@@ -26,7 +26,7 @@ export class TransactionService {
       // Create transaction record
       await (database as any).runAsync(
         'INSERT INTO transactions (id, account_from, account_to, amount, currency, explanation, sender_name, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [transactionId, accountFrom, accountTo, amount, currency, explanation, senderName, TransactionStatus.PENDING]
+        [transactionId, accountFrom, accountTo, amount, currency, explanation, senderName, TransactionStatus.COMPLETED]
       );
 
       const transaction = await (database as any).getAsync(

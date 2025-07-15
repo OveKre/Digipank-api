@@ -39,7 +39,7 @@ export const transactionSchema = Joi.object({
     'number.base': 'Amount must be a number',
     'number.positive': 'Amount must be positive',
     'any.required': 'Amount is required'
-  }),
+  }), // Amount is in euros (e.g., 10.50), stored directly as euros
   explanation: Joi.string().max(500).optional().messages({
     'string.max': 'Explanation must not exceed 500 characters'
   })

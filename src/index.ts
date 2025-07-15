@@ -71,7 +71,7 @@ async function startServer() {
     const port = config.port;
     app.listen(port, () => {
       logger.info(`Server running on port ${port}`);
-      logger.info(`API documentation available at http://localhost:${port}/docs`);
+      logger.info(`API documentation available at https://pank.digikaup.online/docs`);
     });
   } catch (error) {
     logger.error('Failed to start server:', error);

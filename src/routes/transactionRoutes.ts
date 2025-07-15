@@ -1,12 +1,15 @@
 import { Router, Request, Response } from 'express';
 import { TransactionService } from '../services/transactionService';
+import { ExternalTransactionService } from '../services/externalTransactionService';
 import { authenticate } from '../middleware/auth';
 import { transactionSchema } from '../utils/validation';
 import { CryptoUtils } from '../utils/crypto';
 import { Logger } from '../utils/logger';
+import { TransactionStatus } from '../types';
 
 const router = Router();
 const transactionService = new TransactionService();
+const externalTransactionService = new ExternalTransactionService();
 const logger = new Logger();
 
 /**
@@ -70,6 +73,9 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
 
     const { accountFrom, accountTo, amount, explanation } = value;
 
+    // Amount is in euros, store directly as euros
+    const amountInEuros = amount;
+
     // Verify that user owns the source account
     const fromAccount = await transactionService.getAccountByNumber(accountFrom);
     if (!fromAccount) {
@@ -90,11 +96,11 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       });
     }
 
-    // Create transaction
+    // Create transaction with amount in euros
     const transaction = await transactionService.createTransaction(
       accountFrom,
       accountTo,
-      amount,
+      amountInEuros,
       fromAccount.currency,
       explanation
     );
@@ -108,9 +114,45 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
         logger.error(`Failed to process internal transaction: ${transaction.id}`, error);
       }
     } else {
-      // External transaction - would need to send to central bank
-      logger.info(`External transaction created: ${transaction.id}`);
-      // TODO: Implement external transaction processing via central bank
+        // External transaction - send JWT to destination bank
+      logger.info(`Processing external transaction: ${transaction.id}`);
+
+      try {
+        const success = await externalTransactionService.processOutgoingTransaction(
+          transaction.id,
+          transaction.account_from,
+          transaction.account_to,
+          transaction.amount,
+          transaction.currency,
+          transaction.explanation,
+          'Digipanga klient' // Default sender name
+        );
+
+        if (success) {
+          logger.info(`External transaction sent successfully: ${transaction.id}`);
+          // Update transaction status to completed since destination bank accepted it
+          await transactionService.updateTransactionStatus(
+            transaction.id,
+            TransactionStatus.COMPLETED,
+            'Successfully sent to destination bank and accepted'
+          );
+        } else {
+          logger.error(`Failed to send external transaction: ${transaction.id}`);
+          // Update transaction status to failed
+          await transactionService.updateTransactionStatus(
+            transaction.id,
+            TransactionStatus.FAILED,
+            'Failed to send to destination bank'
+          );
+        }
+      } catch (error) {
+        logger.error(`Error processing external transaction ${transaction.id}:`, error);
+        await transactionService.updateTransactionStatus(
+          transaction.id,
+          TransactionStatus.FAILED,
+          'Processing error'
+        );
+      }
     }
 
     // Return updated transaction
@@ -156,9 +198,9 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
 router.get('/', authenticate, async (req: Request, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 50;
-    
+
     const transactions = await transactionService.getUserTransactions(req.user!.id, limit);
-    
+
     res.json(transactions);
   } catch (error) {
     logger.error('Get user transactions error:', error);
@@ -202,7 +244,7 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
 router.get('/:id', authenticate, async (req: Request, res: Response) => {
   try {
     const transactionId = req.params.id;
-    
+
     const transaction = await transactionService.getTransactionById(transactionId);
     if (!transaction) {
       return res.status(404).json({
@@ -214,7 +256,7 @@ router.get('/:id', authenticate, async (req: Request, res: Response) => {
     // Check if user has access to this transaction
     // This should be implemented by checking account ownership
     // For now, we'll return the transaction
-    
+
     res.json(transaction);
   } catch (error) {
     logger.error('Get transaction error:', error);

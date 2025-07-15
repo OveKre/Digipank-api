@@ -16,7 +16,7 @@ Pangarakendus, mis ühildub keskpangaga ja võimaldab teiste pankadega rahaülek
 - ✅ Kontod luuakse unikaalse kontonumbriga, kasutades panga prefiksit
 - ✅ Kasutajad saavad vaadata oma kontojääke
 - ✅ Kontojäägid uuendatakse õigesti pärast tehinguid
-- ✅ Uued kontod luuakse 1000 euro algbalanssiga (100000 senti)
+- ✅ Uued kontod luuakse 1000 euro algbalanssiga
 
 ### Tehingud
 - ✅ Sisemised tehingud sama panga kontode vahel
@@ -110,7 +110,7 @@ npm run dev
 
 ### API Dokumentatsioon
 
-API dokumentatsioon on kättesaadav aadressil: http://localhost:3000/docs
+API dokumentatsioon on kättesaadav aadressil: https://pank.digikaup.online/docs
 
 ## Konfiguratsioon
 
@@ -189,12 +189,12 @@ Produktsioonis tuleb:
 
 ## Valuuta Formaat
 
-**Oluline:** Kõik summad on salvestatud sentides, et vältida ujukomaarvu täpsusprobleeme:
-- 100000 senti = 1000.00 EUR
-- 50 senti = 0.50 EUR
-- 150 senti = 1.50 EUR
+**Oluline:** Kõik summad on salvestatud eurodes kahe kümnendkohaga:
+- 1000.00 EUR = 1000.00 EUR
+- 0.50 EUR = 0.50 EUR
+- 1.50 EUR = 1.50 EUR
 
-See on standardne panganduse praktika, mis tagab täpse raha arvestuse.
+Summad salvestatakse otse eurodes, et lihtsustada kasutaja kogemust.
 
 ## Litsents
 

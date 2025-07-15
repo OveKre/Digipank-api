@@ -39,8 +39,7 @@ export interface Session {
 }
 
 export enum TransactionStatus {
-  PENDING = 'pending',
-  IN_PROGRESS = 'inProgress',
+  IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
   FAILED = 'failed'
 }

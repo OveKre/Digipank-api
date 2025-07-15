@@ -158,7 +158,7 @@ export class UserService {
       
       await (database as any).runAsync(
         'INSERT INTO accounts (id, user_id, name, number, currency, balance) VALUES (?, ?, ?, ?, ?, ?)',
-        [accountId, userId, name, accountNumber, currency, 100000] // 1000 eurot sentides
+        [accountId, userId, name, accountNumber, currency, 1000.0] // 1000 eurot
       );
 
       const account = await (database as any).getAsync(

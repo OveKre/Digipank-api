@@ -59,7 +59,7 @@ export class Database {
         name TEXT NOT NULL,
         number TEXT UNIQUE NOT NULL,
         currency TEXT NOT NULL,
-        balance INTEGER DEFAULT 0,
+        balance REAL DEFAULT 0.0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id)
       )
@@ -70,11 +70,11 @@ export class Database {
         id TEXT PRIMARY KEY,
         account_from TEXT NOT NULL,
         account_to TEXT NOT NULL,
-        amount INTEGER NOT NULL,
+        amount REAL NOT NULL,
         currency TEXT NOT NULL,
         explanation TEXT,
         sender_name TEXT,
-        status TEXT NOT NULL DEFAULT 'pending',
+        status TEXT NOT NULL DEFAULT 'completed',
         status_detail TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
