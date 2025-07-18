@@ -1,5 +1,9 @@
 import Joi from 'joi';
 
+// Supported currencies
+export const SUPPORTED_CURRENCIES = ['EUR', 'USD', 'GBP', 'SEK', 'NOK', 'DKK'] as const;
+export type SupportedCurrency = typeof SUPPORTED_CURRENCIES[number];
+
 export const userRegistrationSchema = Joi.object({
   name: Joi.string().min(2).max(100).required().messages({
     'string.empty': 'Name is required',
@@ -57,9 +61,8 @@ export const accountCreationSchema = Joi.object({
     'string.min': 'Account name must be at least 2 characters long',
     'string.max': 'Account name must not exceed 100 characters'
   }),
-  currency: Joi.string().length(3).uppercase().required().messages({
+  currency: Joi.string().valid(...SUPPORTED_CURRENCIES).required().messages({
     'string.empty': 'Currency is required',
-    'string.length': 'Currency must be exactly 3 characters (ISO code)',
-    'string.uppercase': 'Currency must be uppercase'
+    'any.only': `Currency must be one of: ${SUPPORTED_CURRENCIES.join(', ')}`
   })
 });

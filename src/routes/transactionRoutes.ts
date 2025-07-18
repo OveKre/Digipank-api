@@ -118,6 +118,14 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       logger.info(`Processing external transaction: ${transaction.id}`);
 
       try {
+        // First, check if sender has sufficient funds and debit the amount
+        await transactionService.debitAccount(
+          transaction.account_from,
+          transaction.amount
+        );
+
+        logger.info(`Amount ${transaction.amount} EUR debited from account ${transaction.account_from}`);
+
         const success = await externalTransactionService.processOutgoingTransaction(
           transaction.id,
           transaction.account_from,
@@ -130,6 +138,7 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
 
         if (success) {
           logger.info(`External transaction sent successfully: ${transaction.id}`);
+
           // Update transaction status to completed since destination bank accepted it
           await transactionService.updateTransactionStatus(
             transaction.id,
@@ -138,19 +147,43 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
           );
         } else {
           logger.error(`Failed to send external transaction: ${transaction.id}`);
+
+          // Refund the amount back to sender's account since transaction failed
+          await transactionService.creditAccount(
+            transaction.account_from,
+            transaction.amount
+          );
+
+          logger.info(`Amount ${transaction.amount} EUR refunded to account ${transaction.account_from}`);
+
           // Update transaction status to failed
           await transactionService.updateTransactionStatus(
             transaction.id,
             TransactionStatus.FAILED,
-            'Failed to send to destination bank'
+            'Failed to send to destination bank - amount refunded'
           );
         }
       } catch (error) {
         logger.error(`Error processing external transaction ${transaction.id}:`, error);
+
+        try {
+          // Try to refund the amount if it was already debited
+          await transactionService.creditAccount(
+            transaction.account_from,
+            transaction.amount
+          );
+
+          logger.info(`Amount ${transaction.amount} EUR refunded to account ${transaction.account_from} after error`);
+        } catch (refundError) {
+          logger.error(`Failed to refund amount to account ${transaction.account_from}:`, refundError);
+        }
+
         await transactionService.updateTransactionStatus(
           transaction.id,
           TransactionStatus.FAILED,
-          'Processing error'
+          error instanceof Error ?
+            `${error.message} - amount refunded` :
+            'Processing error - amount refunded'
         );
       }
     }
@@ -167,49 +200,7 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
   }
 });
 
-/**
- * @swagger
- * /transactions:
- *   get:
- *     summary: Get user transactions
- *     description: Get transaction history for the authenticated user
- *     tags: [Transactions]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 50
- *         description: Maximum number of transactions to return
- *     responses:
- *       200:
- *         description: Transactions retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Transaction'
- *       401:
- *         description: Authentication required
- */
-router.get('/', authenticate, async (req: Request, res: Response) => {
-  try {
-    const limit = parseInt(req.query.limit as string) || 50;
 
-    const transactions = await transactionService.getUserTransactions(req.user!.id, limit);
-
-    res.json(transactions);
-  } catch (error) {
-    logger.error('Get user transactions error:', error);
-    res.status(500).json({
-      error: 'Internal Server Error',
-      message: 'An error occurred while retrieving transactions'
-    });
-  }
-});
 
 /**
  * @swagger

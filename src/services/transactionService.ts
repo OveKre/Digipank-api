@@ -146,28 +146,7 @@ export class TransactionService {
     }
   }
 
-  async getUserTransactions(userId: string, limit: number = 50): Promise<Transaction[]> {
-    try {
-      const databaseManager = DatabaseManager.getInstance();
-      const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
-      
-      const transactions = await (database as any).allAsync(
-        `SELECT t.* FROM transactions t 
-         JOIN accounts a1 ON t.account_from = a1.number 
-         JOIN accounts a2 ON t.account_to = a2.number 
-         WHERE a1.user_id = ? OR a2.user_id = ? 
-         ORDER BY t.created_at DESC 
-         LIMIT ?`,
-        [userId, userId, limit]
-      );
 
-      return transactions || [];
-    } catch (error) {
-      this.logger.error('Error getting user transactions:', error);
-      throw error;
-    }
-  }
 
   async getAccountTransactions(accountNumber: string, limit: number = 50): Promise<Transaction[]> {
     try {
@@ -228,7 +207,7 @@ export class TransactionService {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
       const database = db.getDatabase();
-      
+
       const account = await (database as any).getAsync(
         'SELECT * FROM accounts WHERE number = ?',
         [accountNumber]
@@ -237,6 +216,77 @@ export class TransactionService {
       return account;
     } catch (error) {
       this.logger.error('Error getting account by number:', error);
+      throw error;
+    }
+  }
+
+  async debitAccount(accountNumber: string, amount: number): Promise<void> {
+    try {
+      const databaseManager = DatabaseManager.getInstance();
+      const db = databaseManager.getDatabase();
+      const database = db.getDatabase();
+
+      // Check if account has sufficient funds
+      const account = await (database as any).getAsync(
+        'SELECT balance FROM accounts WHERE number = ?',
+        [accountNumber]
+      );
+
+      if (!account) {
+        const error = new Error(`Account ${accountNumber} not found`) as any;
+        error.statusCode = 404;
+        error.error = 'Account Not Found';
+        throw error;
+      }
+
+      if (account.balance < amount) {
+        const error = new Error(`Insufficient funds. Available: ${account.balance.toFixed(2)} EUR, Required: ${amount.toFixed(2)} EUR`) as any;
+        error.statusCode = 422;
+        error.error = 'Insufficient Funds';
+        throw error;
+      }
+
+      // Debit the amount from account
+      await (database as any).runAsync(
+        'UPDATE accounts SET balance = balance - ? WHERE number = ?',
+        [amount, accountNumber]
+      );
+
+      this.logger.info(`Debited ${amount} EUR from account ${accountNumber}. Previous balance: ${account.balance}`);
+    } catch (error) {
+      this.logger.error('Error debiting account:', error);
+      throw error;
+    }
+  }
+
+  async creditAccount(accountNumber: string, amount: number): Promise<void> {
+    try {
+      const databaseManager = DatabaseManager.getInstance();
+      const db = databaseManager.getDatabase();
+      const database = db.getDatabase();
+
+      // Check if account exists
+      const account = await (database as any).getAsync(
+        'SELECT balance FROM accounts WHERE number = ?',
+        [accountNumber]
+      );
+
+      if (!account) {
+        const error = new Error(`Account ${accountNumber} not found`) as any;
+        error.statusCode = 404;
+        error.error = 'Account Not Found';
+        throw error;
+      }
+
+      // Credit the amount to account
+      await (database as any).runAsync(
+        'UPDATE accounts SET balance = balance + ? WHERE number = ?',
+        [amount, accountNumber]
+      );
+
+      this.logger.info(`Credited ${amount} EUR to account ${accountNumber}. Previous balance: ${account.balance}`);
+    } catch (error) {
+      this.logger.error('Error crediting account:', error);
       throw error;
     }
   }

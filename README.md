@@ -99,7 +99,6 @@ npm run dev
 
 #### Tehingud
 - `POST /transactions` - Uue tehingu loomine
-- `GET /transactions` - Kasutaja tehingud
 - `GET /transactions/{id}` - Tehingu detailid
 
 #### B2B (Pangavaheline)
@@ -123,7 +122,7 @@ BANK_PREFIX=DIGI
 BANK_NAME=Digipank
 
 # Server konfiguratsioon
-PORT=3000
+PORT=3001
 NODE_ENV=development
 
 # Andmebaasi konfiguratsioon
@@ -202,4 +201,4 @@ MIT License
 
 ## Kontakt
 
-Support: support@digipank.ee
+

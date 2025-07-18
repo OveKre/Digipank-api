@@ -12,10 +12,14 @@ export interface Account {
   user_id: string;
   name: string;
   number: string;
-  currency: string;
+  currency: SupportedCurrency;
   balance: number;
   created_at?: string;
 }
+
+// Supported currencies
+export const SUPPORTED_CURRENCIES = ['EUR', 'USD', 'GBP', 'SEK', 'NOK', 'DKK'] as const;
+export type SupportedCurrency = typeof SUPPORTED_CURRENCIES[number];
 
 export interface Transaction {
   id: string;

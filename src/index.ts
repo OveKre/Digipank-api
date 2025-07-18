@@ -26,7 +26,10 @@ app.use(cors());
 const limiter = rateLimit({
   windowMs: config.rateLimitWindowMs,
   max: config.rateLimitMaxRequests,
-  message: 'Too many requests from this IP, please try again later.'
+  message: {
+    error: 'Too Many Requests',
+    message: 'Too many requests from this IP, please try again later.'
+  }
 });
 app.use(limiter);
 
