@@ -13,7 +13,7 @@ services:
       - "3309:3306"
     volumes:
       - mariadb-data:/var/lib/mysql
-      - ./scripts:/docker-entrypoint-initdb.d
+      - ./sql-init:/docker-entrypoint-initdb.d
     restart: unless-stopped
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 
