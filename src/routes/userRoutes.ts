@@ -147,7 +147,7 @@ router.get('/current', authenticate, async (req: Request, res: Response) => {
  *               currency:
  *                 type: string
  *                 description: Currency code (supported: EUR, USD, GBP, SEK, NOK, DKK)
-                 enum: [EUR, USD, GBP, SEK, NOK, DKK]
+ *                 enum: [EUR, USD, GBP, SEK, NOK, DKK]
  *             required:
  *               - name
  *               - currency

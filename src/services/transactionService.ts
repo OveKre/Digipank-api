@@ -20,19 +20,20 @@ export class TransactionService {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
       const transactionId = CryptoUtils.generateId();
 
       // Create transaction record
-      await (database as any).runAsync(
-        'INSERT INTO transactions (id, account_from, account_to, amount, currency, explanation, sender_name, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      await db.query(
+        'INSERT INTO transactions (id, from_account, to_account, amount, currency, description, sender_name, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
         [transactionId, accountFrom, accountTo, amount, currency, explanation, senderName, TransactionStatus.COMPLETED]
       );
 
-      const transaction = await (database as any).getAsync(
+      const transactions = await db.query(
         'SELECT * FROM transactions WHERE id = ?',
         [transactionId]
       );
+
+      const transaction = transactions[0];
 
       this.logger.info(`Transaction created: ${transactionId}`);
       return transaction;
@@ -42,41 +43,45 @@ export class TransactionService {
     }
   }
 
-  async processInternalTransaction(transactionId: string): Promise<boolean> {
+  async processInternalTransaction(transactionId: string | number): Promise<boolean> {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
 
       // Get transaction details
-      const transaction = await (database as any).getAsync(
+      const transactions = await db.query(
         'SELECT * FROM transactions WHERE id = ?',
         [transactionId]
       );
 
-      if (!transaction) {
+      if (!transactions || transactions.length === 0) {
         throw new Error('Transaction not found');
       }
 
+      const transaction = transactions[0];
+
       // Update transaction status to in progress
-      await (database as any).runAsync(
+      await db.query(
         'UPDATE transactions SET status = ? WHERE id = ?',
-        [TransactionStatus.IN_PROGRESS, transactionId]
+        [TransactionStatus.PENDING, transactionId]
       );
 
       // Get account balances
-      const fromAccount = await (database as any).getAsync(
+      const fromAccounts = await db.query(
         'SELECT * FROM accounts WHERE number = ?',
         [transaction.account_from]
       );
 
-      const toAccount = await (database as any).getAsync(
+      const toAccounts = await db.query(
         'SELECT * FROM accounts WHERE number = ?',
         [transaction.account_to]
       );
 
+      const fromAccount = fromAccounts?.[0];
+      const toAccount = toAccounts?.[0];
+
       if (!fromAccount || !toAccount) {
-        await (database as any).runAsync(
+        await db.query(
           'UPDATE transactions SET status = ?, status_detail = ? WHERE id = ?',
           [TransactionStatus.FAILED, 'Account not found', transactionId]
         );
@@ -85,7 +90,7 @@ export class TransactionService {
 
       // Check if sender has sufficient funds
       if (fromAccount.balance < transaction.amount) {
-        await (database as any).runAsync(
+        await db.query(
           'UPDATE transactions SET status = ?, status_detail = ? WHERE id = ?',
           [TransactionStatus.FAILED, 'Insufficient funds', transactionId]
         );
@@ -93,18 +98,18 @@ export class TransactionService {
       }
 
       // Perform the transfer
-      await (database as any).runAsync(
+      await db.query(
         'UPDATE accounts SET balance = balance - ? WHERE number = ?',
         [transaction.amount, transaction.account_from]
       );
 
-      await (database as any).runAsync(
+      await db.query(
         'UPDATE accounts SET balance = balance + ? WHERE number = ?',
         [transaction.amount, transaction.account_to]
       );
 
       // Update transaction status to completed
-      await (database as any).runAsync(
+      await db.query(
         'UPDATE transactions SET status = ? WHERE id = ?',
         [TransactionStatus.COMPLETED, transactionId]
       );
@@ -117,9 +122,8 @@ export class TransactionService {
       // Update transaction status to failed
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      await (database as any).runAsync(
+      await db.query(
         'UPDATE transactions SET status = ?, status_detail = ? WHERE id = ?',
         [TransactionStatus.FAILED, errorMessage, transactionId]
       );
@@ -132,13 +136,13 @@ export class TransactionService {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
       
-      const account = await (database as any).getAsync(
+      const accounts = await db.query(
         'SELECT balance FROM accounts WHERE number = ?',
         [accountNumber]
       );
 
+      const account = accounts?.[0];
       return account ? account.balance : 0;
     } catch (error) {
       this.logger.error('Error getting account balance:', error);
@@ -146,15 +150,12 @@ export class TransactionService {
     }
   }
 
-
-
   async getAccountTransactions(accountNumber: string, limit: number = 50): Promise<Transaction[]> {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
       
-      const transactions = await (database as any).allAsync(
+      const transactions = await db.query(
         'SELECT * FROM transactions WHERE account_from = ? OR account_to = ? ORDER BY created_at DESC LIMIT ?',
         [accountNumber, accountNumber, limit]
       );
@@ -166,31 +167,29 @@ export class TransactionService {
     }
   }
 
-  async getTransactionById(id: string): Promise<Transaction | null> {
+  async getTransactionById(id: string | number): Promise<Transaction | null> {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
       
-      const transaction = await (database as any).getAsync(
+      const transactions = await db.query(
         'SELECT * FROM transactions WHERE id = ?',
         [id]
       );
 
-      return transaction;
+      return transactions?.[0] || null;
     } catch (error) {
       this.logger.error('Error getting transaction by ID:', error);
       throw error;
     }
   }
 
-  async updateTransactionStatus(id: string, status: TransactionStatus, statusDetail?: string): Promise<void> {
+  async updateTransactionStatus(id: string | number, status: TransactionStatus, statusDetail?: string): Promise<void> {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
       
-      await (database as any).runAsync(
+      await db.query(
         'UPDATE transactions SET status = ?, status_detail = ? WHERE id = ?',
         [status, statusDetail || null, id]
       );
@@ -206,14 +205,13 @@ export class TransactionService {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
 
-      const account = await (database as any).getAsync(
+      const accounts = await db.query(
         'SELECT * FROM accounts WHERE number = ?',
         [accountNumber]
       );
 
-      return account;
+      return accounts?.[0] || null;
     } catch (error) {
       this.logger.error('Error getting account by number:', error);
       throw error;
@@ -224,13 +222,14 @@ export class TransactionService {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
 
       // Check if account has sufficient funds
-      const account = await (database as any).getAsync(
+      const accounts = await db.query(
         'SELECT balance FROM accounts WHERE number = ?',
         [accountNumber]
       );
+
+      const account = accounts?.[0];
 
       if (!account) {
         const error = new Error(`Account ${accountNumber} not found`) as any;
@@ -247,7 +246,7 @@ export class TransactionService {
       }
 
       // Debit the amount from account
-      await (database as any).runAsync(
+      await db.query(
         'UPDATE accounts SET balance = balance - ? WHERE number = ?',
         [amount, accountNumber]
       );
@@ -263,13 +262,14 @@ export class TransactionService {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
 
       // Check if account exists
-      const account = await (database as any).getAsync(
+      const accounts = await db.query(
         'SELECT balance FROM accounts WHERE number = ?',
         [accountNumber]
       );
+
+      const account = accounts?.[0];
 
       if (!account) {
         const error = new Error(`Account ${accountNumber} not found`) as any;
@@ -279,7 +279,7 @@ export class TransactionService {
       }
 
       // Credit the amount to account
-      await (database as any).runAsync(
+      await db.query(
         'UPDATE accounts SET balance = balance + ? WHERE number = ?',
         [amount, accountNumber]
       );

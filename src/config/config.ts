@@ -14,7 +14,13 @@ export const config = {
   centralBankApiKey: process.env.API_KEY || '',
   
   // Database configuration
-  databasePath: process.env.DATABASE_PATH || './bank.db',
+  database: {
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '3309'),
+    name: process.env.DB_NAME || 'mydb',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '123',
+  },
   
   // JWT configuration
   jwtSecret: process.env.JWT_SECRET || 'default-secret-change-me',

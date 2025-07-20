@@ -1,204 +1,386 @@
 # Digipank API
 
-Pangarakendus, mis ühildub keskpangaga ja võimaldab teiste pankadega rahaülekandeid teha.
+Modern Estonian digital banking API with MariaDB database and comprehensive authentication system.
 
-## Funktsioonid
+## 🚀 Features
 
-### Kasutajahaldus ja Autentimine
-- ✅ Kasutaja registreerimine kehtiva kasutajanime ja parooliga
-- ✅ Registreerimisel nõutud väljade kontroll ja duplikaatide vältimine
-- ✅ Kasutaja sisselogimine sessiooni tokeniga (JWT)
-- ✅ Kasutaja väljalogimine (sessiooni token kustutatakse)
-- ✅ Kasutajad pääsevad ligi ainult oma andmetele
+### User Management & Authentication
+- ✅ User registration with role-based access control (Admin, User, Support, Auditor)
+- ✅ Secure password hashing with bcrypt
+- ✅ JWT-based session management
+- ✅ Multi-factor authentication support
+- ✅ User profile management with email and phone
 
-### Kontohaldus
-- ✅ Igal kasutajal võib olla mitu kontot erinevates valuutades
-- ✅ Kontod luuakse unikaalse kontonumbriga, kasutades panga prefiksit
-- ✅ Kasutajad saavad vaadata oma kontojääke
-- ✅ Kontojäägid uuendatakse õigesti pärast tehinguid
-- ✅ Uued kontod luuakse 1000 euro algbalanssiga
+### Account Management
+- ✅ Multiple accounts per user with different currencies
+- ✅ Account types: Checking, Savings, Credit, Business
+- ✅ Unique account numbers with bank prefix
+- ✅ Real-time balance updates
+- ✅ Account activity tracking
 
-### Tehingud
-- ✅ Sisemised tehingud sama panga kontode vahel
-- ✅ Välised tehingud teiste pankade kontodele
-- ✅ Tehingud sisaldavad vajalikke välju (fromAccount, toAccount, amount, currency)
-- ✅ Tehingu olekut jälgitakse täpselt (pending, inProgress, completed, failed)
-- ✅ Kasutajad saavad vaadata oma tehinguajalugu
+### Transaction Processing
+- ✅ Internal transactions between same bank accounts
+- ✅ External transactions to other banks via JWT
+- ✅ SQL transaction support (BEGIN/COMMIT/ROLLBACK)
+- ✅ Transaction status tracking (Pending, Completed, Cancelled, Failed)
+- ✅ Comprehensive transaction history
+- ✅ Automatic refund on failed external transactions
 
-### Keskpanga Integratsioon
-- ✅ Pank on registreeritud panga prefiksiga (konfiguratsioonifailis)
-- ✅ Pank suudab töödelda sissetulevaid tehinguid teistest pankadest
-- ✅ JWT-allkirjastatud andmepakettide tugi
-- ✅ JWKS lõpp-punkt avalike võtmete avaldamiseks
+### Central Bank Integration
+- ✅ Bank registration with unique prefix (DIGI)
+- ✅ JWT-signed data packets for inter-bank communication
+- ✅ JWKS endpoint for public key distribution
+- ✅ B2B transaction processing
 
-### API Dokumentatsioon
-- ✅ SwaggerUI aadressil /docs
-- ✅ Kõik API lõpp-punktid dokumenteeritud
-- ✅ Asjakohased HTTP staatusekoodid
-- ✅ Robustne vigade käsitlemine
-- ✅ Korrektne autentimise nõudmine
+### Database Management
+- ✅ MariaDB with Docker containerization
+- ✅ Database user management with role-based permissions
+- ✅ Automated backup and restore functionality
+- ✅ Maintenance operations and cleanup scripts
+- ✅ Audit logging for all operations
 
-### Turvalisus
-- ✅ Paroolide räsimine (bcrypt)
-- ✅ JWT tokenite haldamine
-- ✅ Input valideerimine
-- ✅ Rate limiting
-- ✅ Error handling
+### API Documentation
+- ✅ SwaggerUI at /docs endpoint
+- ✅ Complete API endpoint documentation
+- ✅ Proper HTTP status codes
+- ✅ Robust error handling
+- ✅ Input validation with Joi
 
-## Tehnoloogiad
+### Security Features
+- ✅ Password hashing with bcrypt
+- ✅ JWT token management
+- ✅ Input validation and sanitization
+- ✅ Role-based access control
+- ✅ Audit logging
+- ✅ SQL injection prevention
+
+## 🛠 Technologies
 
 - **Backend:** Node.js, TypeScript, Express.js
-- **Andmebaas:** SQLite
-- **Autentimine:** JWT (JSON Web Tokens)
-- **Dokumentatsioon:** Swagger/OpenAPI
-- **Valideerimine:** Joi
-- **Testid:** Jest
-- **Turvalisus:** bcrypt, helmet, cors
+- **Database:** MariaDB 11+ with Docker
+- **Authentication:** JWT (JSON Web Tokens), bcrypt
+- **Documentation:** Swagger/OpenAPI 3.0
+- **Validation:** Joi
+- **Testing:** Jest
+- **Security:** helmet, cors, rate limiting
+- **Containerization:** Docker, Docker Compose
 
-## Paigaldamine
+## 📦 Installation
 
-1. Kloonige repositoorium:
+### Prerequisites
+- Node.js 18+ 
+- Docker and Docker Compose
+- Git
+
+### Setup
+
+1. **Clone the repository:**
 ```bash
-git clone <repository-url>
-cd digipank-api
+git clone https://github.com/OveKre/Digipank-api.git
+cd Digipank-api
 ```
 
-2. Installige sõltuvused:
+2. **Install dependencies:**
 ```bash
 npm install
 ```
 
-3. Konfigureerige keskkonnamuutujad:
+3. **Set up environment:**
 ```bash
 cp .env.example .env
-# Redigeerige .env faili vastavalt vajadusele
+# Edit .env file according to your needs
 ```
 
-4. Käivitage arendusrežiimis:
+4. **Start MariaDB with Docker:**
 ```bash
+docker-compose up -d
+```
+
+5. **Initialize database:**
+```bash
+# Database tables and initial data will be created automatically
 npm run dev
 ```
 
-## Kasutamine
+## 🔧 Configuration
 
-### API Endpointid
-
-#### Autentimine
-- `POST /sessions` - Sisselogimine
-- `DELETE /sessions` - Väljalogimine
-
-#### Kasutajad
-- `POST /users` - Kasutaja registreerimine
-- `GET /users/current` - Praeguse kasutaja andmed
-- `POST /users/accounts` - Uue konto loomine
-- `GET /users/accounts` - Kasutaja kontode loetelu
-
-#### Kontod
-- `GET /accounts/{id}/balance` - Konto jääk
-- `GET /accounts/{id}/transactions` - Konto tehingud
-
-#### Tehingud
-- `POST /transactions` - Uue tehingu loomine
-- `GET /transactions/{id}` - Tehingu detailid
-
-#### B2B (Pangavaheline)
-- `POST /transactions/b2b` - Välise tehingu vastuvõtmine
-
-#### Turvalisus
-- `GET /jwks.json` - JWKS avalikud võtmed
-
-### API Dokumentatsioon
-
-API dokumentatsioon on kättesaadav aadressil: https://pank.digikaup.online/docs
-
-## Konfiguratsioon
-
-Peamised keskkonnamuutujad `.env` failis:
+### Environment Variables (.env)
 
 ```env
-# Keskpanga ja panga konfiguratsioon
+# Central Bank and Bank Configuration
 CENTRAL_BANK_URL=https://api.testbank.ee
 BANK_PREFIX=DIGI
 BANK_NAME=Digipank
+API_KEY=your-api-key
 
-# Server konfiguratsioon
+# Server Configuration
 PORT=3001
 NODE_ENV=development
 
-# Andmebaasi konfiguratsioon
-DATABASE_PATH=./bank.db
+# MariaDB Configuration
+DB_HOST=localhost
+DB_PORT=3309
+DB_USER=root
+DB_PASSWORD=admin123
+DB_NAME=digipank
 
-# JWT konfiguratsioon
+# JWT Configuration
 JWT_SECRET=your-super-secret-jwt-key
 JWT_EXPIRES_IN=24h
+
+# Docker MariaDB
+MYSQL_ROOT_PASSWORD=admin123
+MYSQL_DATABASE=digipank
+MYSQL_USER=bankuser
+MYSQL_PASSWORD=bankpass
 ```
 
-## Testimine
+### Docker Configuration
 
-Käivitage testid:
+The project includes a complete Docker setup:
+
 ```bash
+# Start services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+
+# Database backup
+docker exec Mariadb-container mysqldump -u root -padmin123 digipank > backup.sql
+```
+
+## 🚀 Usage
+
+### Development
+
+```bash
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+
+# Run tests
 npm test
 ```
 
-Käivitage testid watch režiimis:
+### API Endpoints
+
+#### Authentication
+- `POST /sessions` - User login
+- `DELETE /sessions` - User logout
+
+#### Users
+- `POST /users` - User registration
+- `GET /users/current` - Current user data
+- `POST /users/accounts` - Create new account
+- `GET /users/accounts` - List user accounts
+
+#### Accounts
+- `GET /accounts/{id}/balance` - Account balance
+- `GET /accounts/{id}/transactions` - Account transactions
+
+#### Transactions
+- `POST /transactions` - Create new transaction
+- `GET /transactions/{id}` - Transaction details
+
+#### B2B (Inter-bank)
+- `POST /transactions/b2b` - Receive external transaction
+
+#### Security
+- `GET /jwks.json` - JWKS public keys
+
+### API Documentation
+
+Interactive API documentation is available at: `http://localhost:3001/docs`
+
+## 🏗 Architecture
+
+```
+Digipank-api/
+├── src/
+│   ├── config/          # Configuration management
+│   ├── database/        # Database connection and management
+│   │   ├── database.ts      # Main database setup
+│   │   ├── databaseManager.ts # Connection manager
+│   │   └── transactions.ts   # SQL transaction wrapper
+│   ├── middleware/      # Express middleware
+│   ├── routes/          # API route handlers
+│   ├── services/        # Business logic layer
+│   │   ├── authService.ts       # Authentication
+│   │   ├── userService.ts       # User management
+│   │   ├── transactionService.ts # Transaction processing
+│   │   ├── maintenanceService.ts # Database maintenance
+│   │   └── externalTransactionService.ts # Inter-bank
+│   ├── types/          # TypeScript type definitions
+│   └── utils/          # Utility functions
+├── scripts/            # Database management scripts
+│   ├── database-users.sql   # User creation
+│   ├── backup.sh           # Backup script
+│   └── maintenance.sql     # Maintenance queries
+├── docs/              # Documentation
+│   └── database-management.md
+├── docker-compose.yml # Docker configuration
+└── DATABASE_SETUP.md  # Database setup guide
+```
+
+## 🗄 Database Schema
+
+### Core Tables (English naming):
+- `users` - User accounts with roles
+- `accounts` - Bank accounts 
+- `transactions` - All transactions
+- `sessions` - User sessions
+- `roles` - User roles (admin, user, support, auditor)
+- `user_roles` - User-role assignments
+- `audit_log` - System audit trail
+
+### Backward Compatibility:
+Estonian aliases are maintained for backward compatibility via TypeScript type aliases.
+
+## 🔒 Security
+
+### Role-Based Access Control
+- **Admin:** Full system access
+- **User:** Personal account access only
+- **Support:** Read-only customer support access
+- **Auditor:** Read-only audit access
+
+### Database Security
+- Separate database users with minimal required permissions
+- SQL injection prevention
+- Transaction rollback on errors
+- Audit logging for all operations
+
+### Authentication Flow
+1. User registers/logs in
+2. JWT token issued with role information
+3. Each request validates token and checks permissions
+4. Operations logged in audit trail
+
+## 🧪 Testing
+
 ```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
 npm run test:watch
+
+# Run with coverage
+npm run test:coverage
 ```
 
-## Arhitektuur
+## 📊 Monitoring & Maintenance
 
-```
-src/
-├── config/          # Konfiguratsioon
-├── database/        # Andmebaasi haldus
-├── middleware/      # Express middleware
-├── routes/          # API marsruudid
-├── services/        # Äriloogika
-├── types/          # TypeScript tüübid
-└── utils/          # Abifunktsioonid
-```
-
-## Arendamine
-
-1. Käivitage arendusserver:
+### Database Maintenance
 ```bash
-npm run dev
+# Run maintenance scripts
+./scripts/backup.sh
+./scripts/maintenance.sql
+
+# View audit logs
+SELECT * FROM audit_log ORDER BY created_date DESC LIMIT 100;
+
+# Clean expired sessions
+DELETE FROM sessions WHERE expires_date < NOW();
 ```
 
-2. Ehitage produktsiooniks:
+### Health Checks
+- Database connection monitoring
+- Transaction processing rates
+- Failed authentication attempts
+- System resource usage
+
+## 🚀 Deployment
+
+### Production Deployment
+
+1. **Prepare environment:**
 ```bash
+# Set production environment variables
+export NODE_ENV=production
+export DB_HOST=your-production-db-host
+export JWT_SECRET=your-production-jwt-secret
+```
+
+2. **Database setup:**
+```bash
+# Create production database
+# Run migration scripts
+# Set up backup schedule
+```
+
+3. **Security checklist:**
+- [ ] Change all default passwords
+- [ ] Use HTTPS with valid SSL certificates
+- [ ] Configure firewall rules
+- [ ] Set up monitoring and alerting
+- [ ] Enable audit logging
+- [ ] Configure backup strategy
+
+### Hetzner Server Deployment
+
+The project is ready for deployment on Hetzner Cloud:
+
+```bash
+# Push to repository
+git add .
+git commit -m "Production ready - MariaDB migration complete"
+git push origin main
+
+# On server:
+git pull
+docker-compose up -d
 npm run build
-```
-
-3. Käivitage produktsiooniversioon:
-```bash
 npm start
 ```
 
-## Turvaline Juurutamine
+## 💰 Currency Format
 
-Produktsioonis tuleb:
+**Important:** All amounts are stored in EUR with 2 decimal places:
+- Database: `DECIMAL(15,2)` format
+- API: Always in EUR (€)
+- Display: `1000.00 EUR`
 
-1. Muuta kõik paroolid ja võtmed turvaliseiks
-2. Kasutada HTTPS-i
-3. Seadistada proper rate limiting
-4. Konfigureerida monitoring ja logging
-5. Kasutada real krüptograafilisi võtmeid
-6. Seadistada backup süsteem andmebaasile
+No currency conversion is needed as all operations are in EUR.
 
-## Valuuta Formaat
+## 📋 Requirements Compliance
 
-**Oluline:** Kõik summad on salvestatud eurodes kahe kümnendkohaga:
-- 1000.00 EUR = 1000.00 EUR
-- 0.50 EUR = 0.50 EUR
-- 1.50 EUR = 1.50 EUR
+✅ **Academic Requirements Met:**
+- SQL transactions (BEGIN/COMMIT/ROLLBACK) implemented
+- User permission system with roles
+- Database backup/restore functionality  
+- Export/import capabilities
+- DELETE operations with proper constraints
+- Comprehensive documentation
 
-Summad salvestatakse otse eurodes, et lihtsustada kasutaja kogemust.
+## 🤝 Contributing
 
-## Litsents
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/new-feature`
+3. Commit changes: `git commit -am 'Add new feature'`
+4. Push to branch: `git push origin feature/new-feature`
+5. Submit a pull request
 
-MIT License
+## 📝 License
 
-## Kontakt
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## 📞 Contact
+
+- **GitHub:** [@OveKre](https://github.com/OveKre)
+- **Repository:** [Digipank-api](https://github.com/OveKre/Digipank-api)
+
+---
+
+**Status:** ✅ Production Ready - All requirements implemented and tested
 
 

@@ -14,7 +14,7 @@ export class ExternalTransactionService {
    * Process outgoing B2B transaction - generate JWT and send to destination bank
    */
   async processOutgoingTransaction(
-    transactionId: string,
+    transactionId: string | number,
     accountFrom: string,
     accountTo: string,
     amount: number,

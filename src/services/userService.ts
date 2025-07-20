@@ -13,25 +13,24 @@ export class UserService {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
       const userId = CryptoUtils.generateId();
       
       // Hash password
       const passwordHash = await CryptoUtils.hashPassword(userData.password);
       
       // Create user
-      await (database as any).runAsync(
-        'INSERT INTO users (id, name, username, password_hash) VALUES (?, ?, ?, ?)',
-        [userId, userData.name, userData.username, passwordHash]
+      await db.query(
+        'INSERT INTO users (id, name, username, password_hash, email, phone, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [userId, userData.name, userData.username, passwordHash, userData.email, userData.phone, true]
       );
 
       // Create default account
       const accountId = CryptoUtils.generateId();
       const accountNumber = CryptoUtils.generateAccountNumber();
       
-      await (database as any).runAsync(
-        'INSERT INTO accounts (id, user_id, name, number, currency, balance) VALUES (?, ?, ?, ?, ?, ?)',
-        [accountId, userId, 'Main Account', accountNumber, 'EUR', 100000] // 1000 eurot sentides
+      await db.query(
+        'INSERT INTO accounts (id, user_id, name, account_number, currency, balance) VALUES (?, ?, ?, ?, ?, ?)',
+        [accountId, userId, 'Main Account', accountNumber, 'EUR', 1000.00] // 1000 eurot
       );
 
       // Return user with accounts
@@ -52,25 +51,32 @@ export class UserService {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
       
-      const user = await (database as any).getAsync(
-        'SELECT id, name, username, created_at FROM users WHERE id = ?',
+      const users = await db.query(
+        'SELECT id, name, username, email, phone, is_active, created_at FROM users WHERE id = ?',
         [id]
       );
 
-      if (!user) {
+      if (!users || users.length === 0) {
         return null;
       }
 
+      const user = users[0];
+
       // Get user's accounts
-      const accounts = await (database as any).allAsync(
-        'SELECT id, name, number, currency, balance, created_at FROM accounts WHERE user_id = ?',
+      const accounts = await db.query(
+        'SELECT id, name, account_number as number, currency, balance, created_at FROM accounts WHERE user_id = ?',
         [id]
       );
 
       return {
-        ...user,
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        is_active: user.is_active || true,
+        created_date: user.created_at,
         accounts: accounts || []
       };
     } catch (error) {
@@ -83,25 +89,33 @@ export class UserService {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
       
-      const user = await (database as any).getAsync(
-        'SELECT id, name, username, password_hash, created_at FROM users WHERE username = ?',
+      const users = await db.query(
+        'SELECT id, name, username, password_hash, email, phone, is_active, created_at FROM users WHERE username = ?',
         [username]
       );
 
-      if (!user) {
+      if (!users || users.length === 0) {
         return null;
       }
 
+      const user = users[0];
+
       // Get user's accounts
-      const accounts = await (database as any).allAsync(
-        'SELECT id, name, number, currency, balance, created_at FROM accounts WHERE user_id = ?',
+      const accounts = await db.query(
+        'SELECT id, name, account_number as number, currency, balance, created_at FROM accounts WHERE user_id = ?',
         [user.id]
       );
 
       return {
-        ...user,
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        password_hash: user.password_hash,
+        email: user.email,
+        phone: user.phone,
+        is_active: user.is_active || true,
+        created_date: user.created_at,
         accounts: accounts || []
       };
     } catch (error) {
@@ -114,16 +128,17 @@ export class UserService {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
       
-      const user = await (database as any).getAsync(
+      const users = await db.query(
         'SELECT id, name, username, password_hash FROM users WHERE username = ?',
         [username]
       );
 
-      if (!user) {
+      if (!users || users.length === 0) {
         return null;
       }
+
+      const user = users[0];
 
       const isValid = await CryptoUtils.comparePassword(password, user.password_hash);
       if (!isValid) {
@@ -131,8 +146,8 @@ export class UserService {
       }
 
       // Get user's accounts
-      const accounts = await (database as any).allAsync(
-        'SELECT id, name, number, currency, balance, created_at FROM accounts WHERE user_id = ?',
+      const accounts = await db.query(
+        'SELECT id, name, account_number as number, currency, balance, created_at FROM accounts WHERE user_id = ?',
         [user.id]
       );
 
@@ -140,6 +155,10 @@ export class UserService {
         id: user.id,
         name: user.name,
         username: user.username,
+        email: user.email,
+        phone: user.phone,
+        is_active: user.is_active || true,
+        created_date: user.created_at,
         accounts: accounts || []
       };
     } catch (error) {
@@ -152,19 +171,20 @@ export class UserService {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
       const accountId = CryptoUtils.generateId();
       const accountNumber = CryptoUtils.generateAccountNumber();
       
-      await (database as any).runAsync(
-        'INSERT INTO accounts (id, user_id, name, number, currency, balance) VALUES (?, ?, ?, ?, ?, ?)',
+      await db.query(
+        'INSERT INTO accounts (id, user_id, name, account_number, currency, balance) VALUES (?, ?, ?, ?, ?, ?)',
         [accountId, userId, name, accountNumber, currency, 1000.0] // 1000 eurot
       );
 
-      const account = await (database as any).getAsync(
+      const accounts = await db.query(
         'SELECT * FROM accounts WHERE id = ?',
         [accountId]
       );
+
+      const account = accounts[0];
 
       this.logger.info(`Account created: ${accountNumber} for user ${userId}`);
       return account;
@@ -178,9 +198,8 @@ export class UserService {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
       
-      const accounts = await (database as any).allAsync(
+      const accounts = await db.query(
         'SELECT * FROM accounts WHERE user_id = ? ORDER BY created_at DESC',
         [userId]
       );

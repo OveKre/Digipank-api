@@ -113,22 +113,21 @@ router.post('/', async (req: Request, res: Response) => {
       // We don't need to debit from source account as it's external
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
       
       // Update transaction status to in progress
-      await (database as any).runAsync(
+      await db.query(
         'UPDATE transactions SET status = ? WHERE id = ?',
-        [TransactionStatus.IN_PROGRESS, transaction.id]
+        [TransactionStatus.PENDING, transaction.id]
       );
 
       // Credit the destination account with amount in euros
-      await (database as any).runAsync(
+      await db.query(
         'UPDATE accounts SET balance = balance + ? WHERE number = ?',
         [amountInEuros, payload.accountTo]
       );
 
       // Update transaction status to completed
-      await (database as any).runAsync(
+      await db.query(
         'UPDATE transactions SET status = ? WHERE id = ?',
         [TransactionStatus.COMPLETED, transaction.id]
       );
@@ -136,10 +135,12 @@ router.post('/', async (req: Request, res: Response) => {
       logger.info(`B2B transaction processed successfully: ${transaction.id}`);
 
       // Get receiver name from account owner
-      const receiverAccount = await (database as any).getAsync(
+      const receiverAccounts = await db.query(
         'SELECT u.name FROM users u JOIN accounts a ON u.id = a.user_id WHERE a.number = ?',
         [payload.accountTo]
       );
+
+      const receiverAccount = receiverAccounts?.[0];
 
       res.json({
         receiverName: receiverAccount ? receiverAccount.name : 'Unknown'

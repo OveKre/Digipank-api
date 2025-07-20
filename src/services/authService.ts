@@ -33,8 +33,7 @@ export class AuthService {
 
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
-      await (database as any).runAsync(
+      await db.query(
         'INSERT INTO sessions (id, user_id, token, expires_at) VALUES (?, ?, ?, ?)',
         [sessionId, user.id, token, expiresAt.toISOString()]
       );
@@ -51,10 +50,9 @@ export class AuthService {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
       
       // Remove session from database
-      await (database as any).runAsync(
+      await db.query(
         'DELETE FROM sessions WHERE token = ?',
         [token]
       );
@@ -70,14 +68,13 @@ export class AuthService {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
       
-      const session = await (database as any).getAsync(
-        'SELECT * FROM sessions WHERE token = ? AND expires_at > datetime("now")',
+      const sessions = await db.query(
+        'SELECT * FROM sessions WHERE token = ? AND expires_at > NOW()',
         [token]
       );
 
-      return session;
+      return sessions?.[0] || null;
     } catch (error) {
       this.logger.error('Error validating session:', error);
       throw error;
@@ -88,10 +85,9 @@ export class AuthService {
     try {
       const databaseManager = DatabaseManager.getInstance();
       const db = databaseManager.getDatabase();
-      const database = db.getDatabase();
       
-      await (database as any).runAsync(
-        'DELETE FROM sessions WHERE expires_at <= datetime("now")'
+      await db.query(
+        'DELETE FROM sessions WHERE expires_at <= NOW()'
       );
 
       this.logger.info('Expired sessions cleaned up');

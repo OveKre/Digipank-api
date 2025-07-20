@@ -7,6 +7,7 @@ interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     username: string;
+    roles?: string[];
   };
 }
 
@@ -34,12 +35,13 @@ export async function authenticate(
     // Check if session exists in database
     const databaseManager = DatabaseManager.getInstance();
     const db = databaseManager.getDatabase();
-    const database = db.getDatabase();
     
-    const session = await (database as any).getAsync(
-      'SELECT * FROM sessions WHERE token = ? AND expires_at > datetime("now")',
+    const sessions = await db.query(
+      'SELECT * FROM sessions WHERE token = ? AND expires_at > NOW()',
       [token]
     );
+
+    const session = sessions?.[0];
 
     if (!session) {
       res.status(401).json({
@@ -49,11 +51,18 @@ export async function authenticate(
       return;
     }
 
-    // Get user information
-    const user = await (database as any).getAsync(
-      'SELECT id, username FROM users WHERE id = ?',
+    // Get user information with roles
+    const users = await db.query(
+      `SELECT u.id, u.username, GROUP_CONCAT(r.role_name) as roles 
+       FROM users u 
+       LEFT JOIN user_roles ur ON u.id = ur.user_id AND ur.is_active = TRUE
+       LEFT JOIN roles r ON ur.role_id = r.id 
+       WHERE u.id = ? 
+       GROUP BY u.id`,
       [session.user_id]
     );
+
+    const user = users?.[0];
 
     if (!user) {
       res.status(401).json({
@@ -66,7 +75,8 @@ export async function authenticate(
     // Add user to request object
     req.user = {
       id: user.id,
-      username: user.username
+      username: user.username,
+      roles: user.roles ? user.roles.split(',') : []
     };
 
     next();
@@ -91,6 +101,41 @@ export async function authenticate(
   }
 }
 
+// Authorization middleware for role-based access control
+export function authorize(requiredRoles: string | string[]) {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      res.status(401).json({
+        error: 'Authorization Error',
+        message: 'User not authenticated'
+      });
+      return;
+    }
+
+    const userRoles = req.user.roles || [];
+    const rolesArray = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
+
+    // Check if user has any of the required roles
+    const hasRequiredRole = rolesArray.some(role => userRoles.includes(role));
+
+    if (!hasRequiredRole) {
+      res.status(403).json({
+        error: 'Authorization Error',
+        message: `Access denied. Required roles: ${rolesArray.join(', ')}. User roles: ${userRoles.join(', ')}`
+      });
+      return;
+    }
+
+    next();
+  };
+}
+
+// Helper functions for specific role checks
+export const requireAdmin = authorize('admin');
+export const requireUser = authorize(['admin', 'user']);
+export const requireSupport = authorize(['admin', 'support']);
+export const requireAuditor = authorize(['admin', 'auditor']);
+
 // Type declaration for TypeScript
 declare global {
   namespace Express {
@@ -98,6 +143,7 @@ declare global {
       user?: {
         id: string;
         username: string;
+        roles?: string[];
       };
     }
   }
