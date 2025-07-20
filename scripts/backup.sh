@@ -7,9 +7,9 @@
 
 # Configuration
 DB_CONTAINER="Mariadb-container"
-DB_NAME="mydb"
+DB_NAME="digipank"
 DB_USER="root"
-DB_PASSWORD="123"
+DB_PASSWORD="admin123"
 BACKUP_DIR="./backups"
 DATE_FORMAT=$(date +%Y%m%d_%H%M%S)
 
