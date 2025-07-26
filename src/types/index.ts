@@ -4,8 +4,6 @@ export interface User {
   name: string;
   username: string;
   password_hash?: string;
-  email?: string;
-  phone?: string;
   is_active: boolean;
   created_date?: string;
   updated_date?: string;
@@ -41,18 +39,18 @@ export enum AccountType {
 
 // TRANSACTION
 export interface Transaction {
-  id: number;
-  sender_account: string;
-  receiver_account: string;
+  id: string;
+  from_account: string;
+  to_account: string;
   amount: number;
   currency: string;
   transaction_type: TransactionType;
   description?: string;
   sender_name?: string;
   status: TransactionStatus;
-  status_details?: string;
+  status_detail?: string;
   reference_number?: string;
-  created_date?: string;
+  created_at?: string;
 }
 
 // Transaction types

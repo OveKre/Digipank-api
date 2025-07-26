@@ -46,26 +46,23 @@ export class Database {
     // 2. USERS TABLE
     const createUsersTable = `
       CREATE TABLE IF NOT EXISTS users (
-        id INT PRIMARY KEY AUTO_INCREMENT,
+        id VARCHAR(64) PRIMARY KEY,
         name VARCHAR(100) NOT NULL,
         username VARCHAR(50) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
-        email VARCHAR(255) UNIQUE,
-        phone VARCHAR(20),
         is_active BOOLEAN DEFAULT TRUE,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         updated_at DATETIME ON UPDATE CURRENT_TIMESTAMP,
         
-        INDEX idx_username (username),
-        INDEX idx_email (email)
+        INDEX idx_username (username)
       )
     `;
 
     // 3. ACCOUNTS TABLE
     const createAccountsTable = `
       CREATE TABLE IF NOT EXISTS accounts (
-        id INT PRIMARY KEY AUTO_INCREMENT,
-        user_id INT NOT NULL,
+        id VARCHAR(64) PRIMARY KEY,
+        user_id VARCHAR(64) NOT NULL,
         name VARCHAR(100) NOT NULL,
         account_number VARCHAR(30) UNIQUE NOT NULL,
         currency VARCHAR(3) NOT NULL DEFAULT 'EUR',
@@ -84,7 +81,7 @@ export class Database {
     // 4. TRANSACTIONS TABLE
     const createTransactionsTable = `
       CREATE TABLE IF NOT EXISTS transactions (
-        id INT PRIMARY KEY AUTO_INCREMENT,
+        id VARCHAR(64) PRIMARY KEY,
         from_account VARCHAR(30) NOT NULL,
         to_account VARCHAR(30) NOT NULL,
         amount DECIMAL(15,2) NOT NULL,
@@ -109,10 +106,10 @@ export class Database {
     // 5. SESSIONS TABLE
     const createSessionsTable = `
       CREATE TABLE IF NOT EXISTS sessions (
-        id INT PRIMARY KEY AUTO_INCREMENT,
-        user_id INT NOT NULL,
-        token VARCHAR(255) NOT NULL UNIQUE,
-        expires_at DATETIME NOT NULL,
+        id VARCHAR(64) PRIMARY KEY,
+        user_id VARCHAR(64) NOT NULL,
+        token TEXT NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
         ip_address VARCHAR(45),
         user_agent VARCHAR(500),
         is_active BOOLEAN DEFAULT TRUE,
@@ -120,7 +117,6 @@ export class Database {
         
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         INDEX idx_user_id (user_id),
-        INDEX idx_token (token),
         INDEX idx_expires_at (expires_at)
       )
     `;
@@ -128,10 +124,10 @@ export class Database {
     // 6. USER ROLES TABLE
     const createUserRolesTable = `
       CREATE TABLE IF NOT EXISTS user_roles (
-        id INT PRIMARY KEY AUTO_INCREMENT,
-        user_id INT NOT NULL,
+        id VARCHAR(64) PRIMARY KEY,
+        user_id VARCHAR(64) NOT NULL,
         role_id INT NOT NULL,
-        granted_by INT,
+        granted_by VARCHAR(64),
         granted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         expires_at DATETIME,
         is_active BOOLEAN DEFAULT TRUE,
@@ -149,8 +145,8 @@ export class Database {
     // 7. AUDIT LOG TABLE
     const createAuditLogTable = `
       CREATE TABLE IF NOT EXISTS audit_log (
-        id INT PRIMARY KEY AUTO_INCREMENT,
-        user_id INT,
+        id VARCHAR(64) PRIMARY KEY,
+        user_id VARCHAR(64),
         action VARCHAR(50) NOT NULL,
         resource_type VARCHAR(50) NOT NULL,
         resource_id VARCHAR(50),
@@ -215,7 +211,6 @@ export class Database {
         u.id,
         u.name,
         u.username,
-        u.email,
         GROUP_CONCAT(r.role_name) AS roles,
         u.is_active,
         u.created_at
@@ -282,34 +277,38 @@ export class Database {
       const bcrypt = require('bcryptjs');
       const passwordHash = await bcrypt.hash('admin123', 12);
       
+      // Generate admin user ID
+      const adminId = this.generateUUID();
+      
       // Create admin user
-      const [result] = await this.connection!.execute(
-        `INSERT INTO users (name, username, password_hash, email, is_active) 
+      await this.connection!.execute(
+        `INSERT INTO users (id, name, username, password_hash, is_active) 
          VALUES (?, ?, ?, ?, ?)`,
-        ['System Administrator', 'admin', passwordHash, 'admin@digipank.ee', true]
+        [adminId, 'System Administrator', 'admin', passwordHash, true]
       );
       
-      const adminId = (result as any).insertId;
+      // Generate user role ID
+      const userRoleId = this.generateUUID();
       
       // Assign admin role (role ID 1 is admin)
       await this.connection!.execute(
-        `INSERT INTO user_roles (user_id, role_id, granted_by, is_active) 
-         VALUES (?, ?, ?, ?)`,
-        [adminId, 1, adminId, true]
+        `INSERT INTO user_roles (id, user_id, role_id, granted_by, is_active) 
+         VALUES (?, ?, ?, ?, ?)`,
+        [userRoleId, adminId, 1, adminId, true]
       );
       
       // Create admin account
+      const accountId = this.generateUUID();
       const accountNumber = this.generateAccountNumber();
       await this.connection!.execute(
-        `INSERT INTO accounts (user_id, name, account_number, currency, balance, account_type, is_active) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [adminId, 'Admin Main Account', accountNumber, 'EUR', 10000.00, 'checking', true]
+        `INSERT INTO accounts (id, user_id, name, account_number, currency, balance, account_type, is_active) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [accountId, adminId, 'Admin Main Account', accountNumber, 'EUR', 10000.00, 'checking', true]
       );
       
       this.logger.info(`Admin user created successfully:`);
       this.logger.info(`  Username: admin`);
       this.logger.info(`  Password: admin123`);
-      this.logger.info(`  Email: admin@digipank.ee`);
       this.logger.info(`  Account: ${accountNumber}`);
       this.logger.info(`  Balance: 10,000.00 EUR`);
     } else {
@@ -322,6 +321,14 @@ export class Database {
     const bankCode = '05b'; // Digipank
     const random = Math.floor(Math.random() * 10000000000000).toString().padStart(13, '0');
     return `EE21${bankCode}${random}`;
+  }
+
+  private generateUUID(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
   }
 
   getConnection(): mysql.Connection {

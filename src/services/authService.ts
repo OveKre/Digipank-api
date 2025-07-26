@@ -35,7 +35,7 @@ export class AuthService {
       const db = databaseManager.getDatabase();
       await db.query(
         'INSERT INTO sessions (id, user_id, token, expires_at) VALUES (?, ?, ?, ?)',
-        [sessionId, user.id, token, expiresAt.toISOString()]
+        [sessionId, user.id, token, expiresAt]
       );
 
       this.logger.info(`User logged in: ${username}`);

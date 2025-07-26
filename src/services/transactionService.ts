@@ -25,7 +25,7 @@ export class TransactionService {
       // Create transaction record
       await db.query(
         'INSERT INTO transactions (id, from_account, to_account, amount, currency, description, sender_name, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [transactionId, accountFrom, accountTo, amount, currency, explanation, senderName, TransactionStatus.COMPLETED]
+        [transactionId, accountFrom, accountTo, amount, currency, explanation || null, senderName || null, TransactionStatus.COMPLETED]
       );
 
       const transactions = await db.query(
@@ -68,13 +68,13 @@ export class TransactionService {
 
       // Get account balances
       const fromAccounts = await db.query(
-        'SELECT * FROM accounts WHERE number = ?',
-        [transaction.account_from]
+        'SELECT * FROM accounts WHERE account_number = ?',
+        [transaction.from_account]
       );
 
       const toAccounts = await db.query(
-        'SELECT * FROM accounts WHERE number = ?',
-        [transaction.account_to]
+        'SELECT * FROM accounts WHERE account_number = ?',
+        [transaction.to_account]
       );
 
       const fromAccount = fromAccounts?.[0];
@@ -99,13 +99,13 @@ export class TransactionService {
 
       // Perform the transfer
       await db.query(
-        'UPDATE accounts SET balance = balance - ? WHERE number = ?',
-        [transaction.amount, transaction.account_from]
+        'UPDATE accounts SET balance = balance - ? WHERE account_number = ?',
+        [transaction.amount, transaction.from_account]
       );
 
       await db.query(
-        'UPDATE accounts SET balance = balance + ? WHERE number = ?',
-        [transaction.amount, transaction.account_to]
+        'UPDATE accounts SET balance = balance + ? WHERE account_number = ?',
+        [transaction.amount, transaction.to_account]
       );
 
       // Update transaction status to completed
@@ -138,7 +138,7 @@ export class TransactionService {
       const db = databaseManager.getDatabase();
       
       const accounts = await db.query(
-        'SELECT balance FROM accounts WHERE number = ?',
+        'SELECT balance FROM accounts WHERE account_number = ?',
         [accountNumber]
       );
 
@@ -156,7 +156,7 @@ export class TransactionService {
       const db = databaseManager.getDatabase();
       
       const transactions = await db.query(
-        'SELECT * FROM transactions WHERE account_from = ? OR account_to = ? ORDER BY created_at DESC LIMIT ?',
+        'SELECT * FROM transactions WHERE from_account = ? OR to_account = ? ORDER BY created_at DESC LIMIT ?',
         [accountNumber, accountNumber, limit]
       );
 
@@ -207,7 +207,7 @@ export class TransactionService {
       const db = databaseManager.getDatabase();
 
       const accounts = await db.query(
-        'SELECT * FROM accounts WHERE number = ?',
+        'SELECT * FROM accounts WHERE account_number = ?',
         [accountNumber]
       );
 
@@ -225,7 +225,7 @@ export class TransactionService {
 
       // Check if account has sufficient funds
       const accounts = await db.query(
-        'SELECT balance FROM accounts WHERE number = ?',
+        'SELECT balance FROM accounts WHERE account_number = ?',
         [accountNumber]
       );
 
@@ -247,7 +247,7 @@ export class TransactionService {
 
       // Debit the amount from account
       await db.query(
-        'UPDATE accounts SET balance = balance - ? WHERE number = ?',
+        'UPDATE accounts SET balance = balance - ? WHERE account_number = ?',
         [amount, accountNumber]
       );
 
@@ -265,7 +265,7 @@ export class TransactionService {
 
       // Check if account exists
       const accounts = await db.query(
-        'SELECT balance FROM accounts WHERE number = ?',
+        'SELECT balance FROM accounts WHERE account_number = ?',
         [accountNumber]
       );
 
@@ -280,7 +280,7 @@ export class TransactionService {
 
       // Credit the amount to account
       await db.query(
-        'UPDATE accounts SET balance = balance + ? WHERE number = ?',
+        'UPDATE accounts SET balance = balance + ? WHERE account_number = ?',
         [amount, accountNumber]
       );
 

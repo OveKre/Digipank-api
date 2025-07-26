@@ -120,16 +120,16 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
       try {
         // First, check if sender has sufficient funds and debit the amount
         await transactionService.debitAccount(
-          transaction.sender_account,
+          transaction.from_account,
           transaction.amount
         );
 
-        logger.info(`Amount ${transaction.amount} EUR debited from account ${transaction.sender_account}`);
+        logger.info(`Amount ${transaction.amount} EUR debited from account ${transaction.from_account}`);
 
         const success = await externalTransactionService.processOutgoingTransaction(
           transaction.id,
-          transaction.sender_account,
-          transaction.receiver_account,
+          transaction.from_account,
+          transaction.to_account,
           transaction.amount,
           transaction.currency,
           transaction.description,
@@ -150,11 +150,11 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
 
           // Refund the amount back to sender's account since transaction failed
           await transactionService.creditAccount(
-            transaction.sender_account,
+            transaction.from_account,
             transaction.amount
           );
 
-          logger.info(`Amount ${transaction.amount} EUR refunded to account ${transaction.sender_account}`);
+          logger.info(`Amount ${transaction.amount} EUR refunded to account ${transaction.from_account}`);
 
           // Update transaction status to failed
           await transactionService.updateTransactionStatus(
@@ -169,13 +169,13 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
         try {
           // Try to refund the amount if it was already debited
           await transactionService.creditAccount(
-            transaction.sender_account,
+            transaction.from_account,
             transaction.amount
           );
 
-          logger.info(`Amount ${transaction.amount} EUR refunded to account ${transaction.sender_account} after error`);
+          logger.info(`Amount ${transaction.amount} EUR refunded to account ${transaction.from_account} after error`);
         } catch (refundError) {
-          logger.error(`Failed to refund amount to account ${transaction.sender_account}:`, refundError);
+          logger.error(`Failed to refund amount to account ${transaction.from_account}:`, refundError);
         }
 
         await transactionService.updateTransactionStatus(

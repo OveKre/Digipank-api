@@ -20,8 +20,8 @@ export class UserService {
       
       // Create user
       await db.query(
-        'INSERT INTO users (id, name, username, password_hash, email, phone, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [userId, userData.name, userData.username, passwordHash, userData.email, userData.phone, true]
+        'INSERT INTO users (id, name, username, password_hash, is_active) VALUES (?, ?, ?, ?, ?)',
+        [userId, userData.name, userData.username, passwordHash, true]
       );
 
       // Create default account
@@ -53,7 +53,7 @@ export class UserService {
       const db = databaseManager.getDatabase();
       
       const users = await db.query(
-        'SELECT id, name, username, email, phone, is_active, created_at FROM users WHERE id = ?',
+        'SELECT id, name, username, is_active, created_at FROM users WHERE id = ?',
         [id]
       );
 
@@ -73,8 +73,6 @@ export class UserService {
         id: user.id,
         name: user.name,
         username: user.username,
-        email: user.email,
-        phone: user.phone,
         is_active: user.is_active || true,
         created_date: user.created_at,
         accounts: accounts || []
@@ -91,7 +89,7 @@ export class UserService {
       const db = databaseManager.getDatabase();
       
       const users = await db.query(
-        'SELECT id, name, username, password_hash, email, phone, is_active, created_at FROM users WHERE username = ?',
+        'SELECT id, name, username, password_hash, is_active, created_at FROM users WHERE username = ?',
         [username]
       );
 
@@ -112,8 +110,6 @@ export class UserService {
         name: user.name,
         username: user.username,
         password_hash: user.password_hash,
-        email: user.email,
-        phone: user.phone,
         is_active: user.is_active || true,
         created_date: user.created_at,
         accounts: accounts || []
@@ -155,8 +151,6 @@ export class UserService {
         id: user.id,
         name: user.name,
         username: user.username,
-        email: user.email,
-        phone: user.phone,
         is_active: user.is_active || true,
         created_date: user.created_at,
         accounts: accounts || []
